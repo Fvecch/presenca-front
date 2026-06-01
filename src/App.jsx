@@ -1,5 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
 const API = "https://sistema-presenca-ddd-t85n.onrender.com";
 
 const normalizeStatus = (s) => {
@@ -95,8 +105,13 @@ function Modal({ title, onClose, children }) {
       display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
     }} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{
-        background: "#fff", borderRadius: 16, padding: "28px 32px",
+        background: "#fff", borderRadius: window.innerWidth < 640 ? "16px 16px 0 0" : 16,
+        padding: window.innerWidth < 640 ? "24px 20px" : "28px 32px",
         width: "100%", maxWidth: 500, boxShadow: "0 24px 48px rgba(0,0,0,0.18)",
+        position: window.innerWidth < 640 ? "fixed" : "relative",
+        bottom: window.innerWidth < 640 ? 0 : "auto",
+        maxHeight: window.innerWidth < 640 ? "90vh" : "none",
+        overflowY: "auto",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "#1a1a2e" }}>{title}</h2>
@@ -526,7 +541,7 @@ function ClassLogCard({ log, courses, students, onRefresh }) {
   };
 
   return (
-    <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #e8e8e8", padding: "20px 24px", marginBottom: 16 }}>
+    <div style={{ background: "#fff", borderRadius: 14, border: "1.5px solid #e8e8e8", padding: window.innerWidth < 640 ? "14px 14px" : "20px 24px", marginBottom: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -563,8 +578,8 @@ function ClassLogCard({ log, courses, students, onRefresh }) {
           const statusNum = normalizeStatus(r.status);
           return (
             <div key={r.student_id} style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "10px 0", borderBottom: "1px solid #f9f9f9",
+              display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between",
+              padding: "10px 0", borderBottom: "1px solid #f9f9f9", gap: 8,
             }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 <span style={{ fontSize: 14, color: "#1a1a2e", fontWeight: 500 }}>{name}</span>
@@ -623,6 +638,7 @@ function ClassLogCard({ log, courses, students, onRefresh }) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
+  const isMobile = useIsMobile();
   const [logs, setLogs] = useState([]);
   const [totalLogs, setTotalLogs] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -683,46 +699,47 @@ export default function App() {
       {/* Header */}
       <header style={{
         background: "#fff", borderBottom: "1.5px solid #ebebeb",
-        padding: "14px 40px", display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: isMobile ? "12px 16px" : "14px 40px",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
         position: "sticky", top: 0, zIndex: 100,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: "#4361ee", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "#4361ee", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
             </svg>
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1a1a2e" }}>Sistema de Presença</h1>
-            <p style={{ margin: 0, fontSize: 12, color: "#aaa" }}>Controle de frequência escolar — DDD</p>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 15 : 18, fontWeight: 700, color: "#1a1a2e" }}>Sistema de Presença</h1>
+            {!isMobile && <p style={{ margin: 0, fontSize: 12, color: "#aaa" }}>Controle de frequência escolar — DDD</p>}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <Btn variant="edit" onClick={() => setModal("catalogo")}>
+        <div style={{ display: "flex", gap: isMobile ? 6 : 10 }}>
+          <Btn variant="edit" onClick={() => setModal("catalogo")} style={{ padding: isMobile ? "7px 10px" : undefined }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
             </svg>
-            Catálogo
+            {!isMobile && "Catálogo"}
           </Btn>
-          <Btn variant="ghost" onClick={() => fetchAll(false)}>
+          <Btn variant="ghost" onClick={() => fetchAll(false)} style={{ padding: isMobile ? "7px 10px" : undefined }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               style={{ animation: refreshing ? "spin 1s linear infinite" : "none" }}>
               <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
             </svg>
-            Atualizar
+            {!isMobile && "Atualizar"}
           </Btn>
-          <Btn onClick={() => setModal("nova")}>
+          <Btn onClick={() => setModal("nova")} style={{ padding: isMobile ? "7px 12px" : undefined, fontSize: isMobile ? 12 : 13 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Nova chamada
+            {isMobile ? "Nova" : "Nova chamada"}
           </Btn>
         </div>
       </header>
 
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px" }}>
+      <main style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "16px 12px" : "32px 24px" }}>
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)", gap: 10, marginBottom: 24 }}>
           {[
             { label: "Diários",      value: stats.diarios,      color: "#1a1a2e" },
             { label: "Registros",    value: stats.registros,    color: "#1a1a2e" },
